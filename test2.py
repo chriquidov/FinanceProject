@@ -183,9 +183,9 @@ try:
             value = money
             for ticker in tickers:
                 tickprice = getprice(today, ticker)
-                if not tickprice.empty:
+                if not pd.isnull(tickprice):
                     value += portfolio[ticker]*tickprice
-            return (value[0]*100)/100
+            return int(value*100)/100
 
 
         if selected == "Best Sector":
@@ -237,7 +237,7 @@ try:
                     simulation()
                     currentpvalue = currentvalue()
                     best_sectors_log.loc[best_sectors_log.shape[0]] = [today, currentpvalue]
-                    st.write([today, currentpvalue])
+                    #st.write([today, currentpvalue])
                     today += dt.timedelta(days=7)
 
                 st.write("\n\nThis is the graph of the portfolio value")
@@ -256,7 +256,7 @@ try:
                 st.write("With this method, the portfolio was worth {} on {} and today the portfolio is worth: ${}.".format(initial_money, start_date_f, best_sectors_log['Current_Value'][length]))
 
                 performance_best_sectors = (((best_sectors_log['Current_Value'][length])/initial_money)-1)*100
-                st.write("This is a fluctuation of {}% over the period.".format(performance_best_sectors))
+                st.write("This is a fluctuation of {}% over the period.".format(round(performance_best_sectors, 3)))
 
                 best_sectors_log = pd.DataFrame(transactionlog)
                 best_sectors_log_str = pd.DataFrame.to_string(best_sectors_log)
@@ -267,42 +267,42 @@ try:
                 best_sectors_log['Positive_return']=np.select([best_sectors_log['profit']>0 ,(best_sectors_log['profit']==0) & (best_sectors_log.type=='buy'),
                                  (best_sectors_log['profit']==0) & (best_sectors_log.type=='sell'),best_sectors_log['profit']<0],[1,None,-1,-1])
 
-                # occurences=[]
-                # tick_prof=[]
-                # avg_tick_profit=[]
-                # profitable=[]
-                # for ticker in tickers:
-                #     occurence=len(best_sectors_log.loc[best_sectors_log.ticker==ticker])/2
-                #     occurences.append(occurence)
-                #     tot_profit=round(best_sectors_log.loc[best_sectors_log.ticker==ticker].profit.sum(),1)
-                #     tick_prof.append(tot_profit)
-                #     avg_tick_profit.append(round(tot_profit/occurence,1))
-                #     profitable.append(round(len(best_sectors_log.loc[(best_sectors_log.ticker==ticker)&(best_sectors_log.Positive_return>0)])/occurence,5)*100)
-                # best_sectors_stats=pd.DataFrame()
-                # best_sectors_stats['ticker']=tickers
-                # best_sectors_stats['occurences']=occurences
-                # best_sectors_stats['profit_from_ticker']=tick_prof
-                # best_sectors_stats['avg_profit']=avg_tick_profit
-                # best_sectors_stats['%_Positive_returns']=profitable
+                occurences=[]
+                tick_prof=[]
+                avg_tick_profit=[]
+                profitable=[]
+                for ticker in tickers:
+                    occurence=len(best_sectors_log.loc[best_sectors_log.ticker==ticker])/2
+                    occurences.append(occurence)
+                    tot_profit=round(best_sectors_log.loc[best_sectors_log.ticker==ticker].profit.sum(),1)
+                    tick_prof.append(tot_profit)
+                    avg_tick_profit.append(round(tot_profit/occurence,1))
+                    profitable.append(round(len(best_sectors_log.loc[(best_sectors_log.ticker==ticker)&(best_sectors_log.Positive_return>0)])/occurence,5)*100)
+                best_sectors_stats=pd.DataFrame()
+                best_sectors_stats['ticker']=tickers
+                best_sectors_stats['occurences']=occurences
+                best_sectors_stats['profit_from_ticker']=tick_prof
+                best_sectors_stats['avg_profit']=avg_tick_profit
+                best_sectors_stats['%_Positive_returns']=profitable
 
-                # st.write("Statistics on the Best Sectors strategy:")
-                # st.dataframe(best_sectors_stats, height=500)
+                st.write("Statistics on the Best Sectors strategy:")
+                st.dataframe(best_sectors_stats, height=500)
 
-                # fig = px.bar(        
-                #         best_sectors_stats, #Data Frame
-                #         x = "ticker", #Columns from the data frame
-                #         y = "%_Positive_returns",
-                #         title = "Best Sectors Strategy Stats - Percentage of positive returns"
-                #     )
-                # st.plotly_chart(fig)
+                fig = px.bar(        
+                        best_sectors_stats, #Data Frame
+                        x = "ticker", #Columns from the data frame
+                        y = "%_Positive_returns",
+                        title = "Best Sectors Strategy Stats - Percentage of positive returns"
+                    )
+                st.plotly_chart(fig)
 
-                # fig = px.bar(        
-                #         best_sectors_stats, #Data Frame
-                #         x = "ticker", #Columns from the data frame
-                #         y = "profit_from_ticker",
-                #         title = "Best Sectors Strategy Stats - profit made from tickers"
-                #     )
-                # st.plotly_chart(fig)
+                fig = px.bar(        
+                        best_sectors_stats, #Data Frame
+                        x = "ticker", #Columns from the data frame
+                        y = "profit_from_ticker",
+                        title = "Best Sectors Strategy Stats - profit made from tickers"
+                    )
+                st.plotly_chart(fig)
 
             main()
         elif selected == "Worst Sector":
@@ -442,7 +442,120 @@ try:
         elif selected == "Interval Strategy Daily":
             st.write("Code here")
         elif selected == "Volume Strategy":
-            st.write("Code here")
+            prices = Prices_Daily
+            volumechanges = Volume_Daily.pct_change()*100
+
+            st.write("This is the dataframe this strategy works on.")
+            st.dataframe(volumechanges)
+
+            def transaction(id, ticker, amount, price, type,profit):
+                global transactionid
+                if type == "buy":
+                    exp_date = today + dt.timedelta(days=14)
+                    transactionid += 1
+                else:
+                    exp_date = today
+                if type == "sell":
+                    data = {"id": id, "ticker": ticker, "amount": amount, "price": price, "date": today, "type": type,
+                            "exp_date": exp_date, "profit": profit}
+                elif type == "buy":
+                    data = {"id": transactionid, "ticker": ticker, "amount": amount, "price": price, "date": today, "type": type,
+                            "exp_date": exp_date, "profit": profit}
+                    activelog.append(data)
+                transactionlog.append(data)
+
+            def tradingday():
+                global day_prices, today
+                return np.datetime64(today) in list(day_prices.index.values)
+
+            def simulation():
+                global money, portfolio, today, prices
+                value = money
+                for ticker in tickers:
+                    tickprice = getprice(today, ticker)
+                    if not pd.isnull(tickprice):
+                        value += portfolio[ticker]*tickprice
+                return int(value*100)/100
+
+
+            def main():
+                global today
+                volume_log = pd.DataFrame(columns=['Date','Current_Value'])
+                for ticker in tickers:
+                    portfolio[ticker] = 0
+                while today <= simend:
+                    while not tradingday():
+                        today += dt.timedelta(days=14)
+                    simulation()
+                    currentpvalue = currentvalue()
+                    volume_log.loc[volume_log.shape[0]] = [today, currentpvalue]
+                    today += dt.timedelta(days=1)
+
+                st.write("\n\nThis is the graph of the portfolio value")
+
+                fig = px.line(        
+                        volume_log, #Data Frame
+                        x = "Date", #Columns from the data frame
+                        y = "Current_Value",
+                        title = "Volume Strategy"
+                    )
+                fig.update_traces(line_color = "green")
+                st.plotly_chart(fig)
+
+
+                length = len(volume_log) - 1
+                st.write("With this method, the portfolio was worth {} on {} and today the portfolio is worth: ${}.".format(initial_money, start_date_f, daily_interval_log['Current_Value'][length]))
+
+                performance_volume = (((volume_log['Current_Value'][length])/initial_money)-1)*100
+                st.write("This is a fluctuation of {}% over the period.".format(performance_volume))
+
+                volume_log = pd.DataFrame(transactionlog)
+                volume_log_str = pd.DataFrame.to_string(volume_log)
+                if st.download_button('Download Transaction File', volume_log_str, 'Daily_Intervals_Sectors.txt'):
+                    st.write('Thanks for downloading!')
+
+                volume_log['Positive_return']=np.select([volume_log['profit']>0 ,(volume_log['profit']==0) & (volume_log.type=='buy'),
+                                 (volume_log['profit']==0) & (volume_log.type=='sell'),volume_log['profit']<0],[1,None,-1,-1])
+
+                occurences=[]
+                tick_prof=[]
+                avg_tick_profit=[]
+                profitable=[]
+                for ticker in tickers:
+                    occurence=len(volume_log.loc[volume_log.ticker==ticker])/2
+                    occurences.append(occurence)
+                    tot_profit=round(volume_log.loc[volume_log.ticker==ticker].profit.sum(),1)
+                    tick_prof.append(tot_profit)
+                    avg_tick_profit.append(round(tot_profit/occurence,1))
+                    profitable.append(round(len(volume_log.loc[(volume_log.ticker==ticker)&(volume_log.Positive_return>0)])/occurence,5)*100)
+                volume_stats=pd.DataFrame()
+                volume_stats['ticker']=tickers
+                volume_stats['occurences']=occurences
+                volume_stats['profit_from_ticker']=tick_prof
+                volume_stats['avg_profit']=avg_tick_profit
+                volume_stats['%_Positive_returns']=profitable
+
+                st.write("Statistics on the Best Sectors strategy:")
+                st.dataframe(volume_stats, height=500)
+
+                fig = px.bar(        
+                        volume_stats, #Data Frame
+                        x = "ticker", #Columns from the data frame
+                        y = "%_Positive_returns",
+                        title = "Daily Intervals Strategy Stats - Percentage of positive returns"
+                    )
+                st.plotly_chart(fig)
+
+                fig = px.bar(        
+                        volume_stats, #Data Frame
+                        x = "ticker", #Columns from the data frame
+                        y = "profit_from_ticker",
+                        title = "Daily Intervals Strategy Stats - profit made from tickers"
+                    )
+                st.plotly_chart(fig)
+
+            main()
+
 
 except URLError as e:
     st.error(
