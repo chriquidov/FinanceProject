@@ -529,7 +529,10 @@ try:
                     tot_profit=round(weekly_interval_log.loc[weekly_interval_log.ticker==ticker].profit.sum(),1)
                     tick_prof.append(tot_profit)
                     avg_tick_profit.append(round(tot_profit/occurence,1))
-                    profitable.append(round(len(weekly_interval_log.loc[(weekly_interval_log.ticker==ticker)&(weekly_interval_log.Positive_return>0)])/occurence,5)*100)
+                    if occurence > 0:
+                        profitable.append(round(len(worst_sectors_log.loc[(worst_sectors_log.ticker==ticker)&(worst_sectors_log.Positive_return>0)])/occurence,5)*100)
+                    else:
+                        profitable.append(0)
                 weekly_interval_stats=pd.DataFrame()
                 weekly_interval_stats['ticker']=tickers
                 weekly_interval_stats['occurences']=occurences
@@ -657,7 +660,10 @@ try:
                     tot_profit=round(daily_interval_log.loc[daily_interval_log.ticker==ticker].profit.sum(),1)
                     tick_prof.append(tot_profit)
                     avg_tick_profit.append(round(tot_profit/occurence,1))
-                    profitable.append(round(len(daily_interval_log.loc[(daily_interval_log.ticker==ticker)&(daily_interval_log.Positive_return>0)])/occurence,5)*100)
+                    if occurence > 0:
+                        profitable.append(round(len(worst_sectors_log.loc[(worst_sectors_log.ticker==ticker)&(worst_sectors_log.Positive_return>0)])/occurence,5)*100)
+                    else:
+                        profitable.append(0)
                 daily_interval_stats=pd.DataFrame()
                 daily_interval_stats['ticker']=tickers
                 daily_interval_stats['occurences']=occurences
@@ -771,7 +777,10 @@ try:
                     tot_profit=round(volume_log.loc[volume_log.ticker==ticker].profit.sum(),1)
                     tick_prof.append(tot_profit)
                     avg_tick_profit.append(round(tot_profit/occurence,1))
-                    profitable.append(round(len(volume_log.loc[(volume_log.ticker==ticker)&(volume_log.Positive_return>0)])/occurence,5)*100)
+                    if occurence > 0:
+                        profitable.append(round(len(worst_sectors_log.loc[(worst_sectors_log.ticker==ticker)&(worst_sectors_log.Positive_return>0)])/occurence,5)*100)
+                    else:
+                        profitable.append(0)
                 volume_stats=pd.DataFrame()
                 volume_stats['ticker']=tickers
                 volume_stats['occurences']=occurences
