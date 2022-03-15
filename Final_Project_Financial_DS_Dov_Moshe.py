@@ -498,11 +498,8 @@ try:
                     occurences.append(occurence)
                     tot_profit=round(weekly_interval_log.loc[weekly_interval_log.ticker==ticker].profit.sum(),1)
                     tick_prof.append(tot_profit)
-                    avg_tick_profit.append(round(tot_profit/occurence,1)) 
-                    if occurence > 0:
-                        profitable.append(round(len(weekly_interval_log.loc[(weekly_interval_log.ticker==ticker)&(weekly_interval_log.Positive_return>0)])/occurence,5)*100)
-                    else:
-                        profitable.append(0)
+                    avg_tick_profit.append(round(tot_profit/occurence,1))
+                    profitable.append(round(len(weekly_interval_log.loc[(weekly_interval_log.ticker==ticker)&(weekly_interval_log.Positive_return>0)])/occurence,5)*100)
                 weekly_interval_stats=pd.DataFrame()
                 weekly_interval_stats['ticker']=tickers
                 weekly_interval_stats['occurences']=occurences
@@ -510,7 +507,7 @@ try:
                 weekly_interval_stats['avg_profit']=avg_tick_profit
                 weekly_interval_stats['%_Positive_returns']=profitable
 
-                st.write("Statistics on the Best Sectors strategy:")
+                st.write("Statistics on the Interval Weekly strategy:")
                 st.dataframe(weekly_interval_stats, height=500)
 
                 fig = px.bar(        
@@ -629,14 +626,14 @@ try:
                 volume_stats['avg_profit']=avg_tick_profit
                 volume_stats['%_Positive_returns']=profitable
 
-                st.write("Statistics on the Best Sectors strategy:")
+                st.write("Statistics on the Volume Strategy strategy:")
                 st.dataframe(volume_stats, height=500)
 
                 fig = px.bar(        
                         volume_stats, #Data Frame
                         x = "ticker", #Columns from the data frame
                         y = "%_Positive_returns",
-                        title = "Daily Intervals Strategy Stats - Percentage of positive returns"
+                        title = "Volume Strategy Stats - Percentage of positive returns"
                     )
                 st.plotly_chart(fig)
 
@@ -644,7 +641,7 @@ try:
                         volume_stats, #Data Frame
                         x = "ticker", #Columns from the data frame
                         y = "profit_from_ticker",
-                        title = "Daily Intervals Strategy Stats - profit made from tickers"
+                        title = "Volume Strategy Stats - profit made from tickers"
                     )
                 st.plotly_chart(fig)
 
@@ -704,7 +701,7 @@ try:
                         market_strategy_log, #Data Frame
                         x = "Date", #Columns from the data frame
                         y = "Current_Value",
-                        title = "Best Sectors Strategy"
+                        title = "Volume Strategy"
                     )
                 fig.update_traces(line_color = "green")
                 st.plotly_chart(fig)
@@ -887,10 +884,7 @@ try:
                         tot_profit=round(daily_interval_log.loc[daily_interval_log.ticker==ticker].profit.sum(),1)
                         tick_prof.append(tot_profit)
                         avg_tick_profit.append(round(tot_profit/occurence,1))
-                        if occurence > 0:
-                            profitable.append(round(len(daily_interval_log.loc[(daily_interval_log.ticker==ticker)&(daily_interval_log.Positive_return>0)])/occurence,5)*100)
-                        else:
-                            profitable.append(0)
+                        profitable.append(round(len(daily_interval_log.loc[(daily_interval_log.ticker==ticker)&(daily_interval_log.Positive_return>0)])/occurence,5)*100)
                     daily_interval_stats=pd.DataFrame()
                     daily_interval_stats['ticker']=tickers
                     daily_interval_stats['occurences']=occurences
