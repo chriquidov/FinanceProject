@@ -500,7 +500,7 @@ try:
                     tick_prof.append(tot_profit)
                     avg_tick_profit.append(round(tot_profit/occurence,1)) 
                     if occurence > 0:
-                        profitable.append(round(len(best_sectors_log.loc[(best_sectors_log.ticker==ticker)&(best_sectors_log.Positive_return>0)])/occurence,5)*100)
+                        profitable.append(round(len(weekly_interval_log.loc[(weekly_interval_log.ticker==ticker)&(weekly_interval_log.Positive_return>0)])/occurence,5)*100)
                     else:
                         profitable.append(0)
                 weekly_interval_stats=pd.DataFrame()
@@ -888,7 +888,7 @@ try:
                         tick_prof.append(tot_profit)
                         avg_tick_profit.append(round(tot_profit/occurence,1))
                         if occurence > 0:
-                            profitable.append(round(len(best_sectors_log.loc[(best_sectors_log.ticker==ticker)&(best_sectors_log.Positive_return>0)])/occurence,5)*100)
+                            profitable.append(round(len(daily_interval_log.loc[(daily_interval_log.ticker==ticker)&(daily_interval_log.Positive_return>0)])/occurence,5)*100)
                         else:
                             profitable.append(0)
                     daily_interval_stats=pd.DataFrame()
